@@ -24,7 +24,7 @@ export default function RequirementDocument({
   onComplete, 
   isLoading 
 }: RequirementDocumentProps) {
-  const [document, setDocument] = useState<DocumentSection[]>([])
+  const [documentSections, setDocumentSections] = useState<DocumentSection[]>([])
   const [isGenerating, setIsGenerating] = useState(true)
   const [editingSection, setEditingSection] = useState<string | null>(null)
   const [documentType, setDocumentType] = useState<'MRD' | 'PRD'>('MRD')
@@ -54,7 +54,7 @@ export default function RequirementDocument({
           ...section,
           editable: true
         }))
-        setDocument(formattedDoc)
+        setDocumentSections(formattedDoc)
       } else {
         // 如果AI返回空结果，使用默认生成
         throw new Error('AI返回空文档')
@@ -67,7 +67,7 @@ export default function RequirementDocument({
       // 使用本地生成逻辑作为fallback
       await new Promise(resolve => setTimeout(resolve, 1000))
       const generatedDoc = generateDocumentSections()
-      setDocument(generatedDoc)
+      setDocumentSections(generatedDoc)
     } finally {
       setIsGenerating(false)
     }
@@ -228,7 +228,7 @@ ${answers.budget_timeline || '2-4周'}
   }
 
   const handleSectionEdit = (sectionId: string, newContent: string) => {
-    setDocument(prev => prev.map(section => 
+    setDocumentSections((prev: DocumentSection[]) => prev.map((section: DocumentSection) => 
       section.id === sectionId 
         ? { ...section, content: newContent }
         : section
@@ -254,13 +254,13 @@ ${answers.budget_timeline || '2-4周'}
   }
 
   const downloadDocument = () => {
-    const fullContent = document.map(section => 
+    const fullContent = documentSections.map(section => 
       `${section.title}\n${'='.repeat(section.title.length)}\n${section.content}\n\n`
     ).join('')
     
     const blob = new Blob([fullContent], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = window.document.createElement('a')
     a.href = url
     a.download = `${documentType}_${new Date().toISOString().split('T')[0]}.md`
     a.click()
@@ -365,7 +365,7 @@ ${answers.budget_timeline || '2-4周'}
 
       {/* Document Sections */}
       <div className="space-y-6">
-        {document.map((section, index) => (
+                    {documentSections.map((section: DocumentSection, index: number) => (
           <div key={section.id} className="bg-white border border-gray-200 rounded-xl shadow-sm">
             <div className="flex justify-between items-center p-4 border-b border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900">{section.title}</h3>
@@ -426,12 +426,12 @@ ${answers.budget_timeline || '2-4周'}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="grid grid-cols-4 gap-4 text-center">
           <div>
-            <div className="text-2xl font-bold text-blue-600">{document.length}</div>
+                            <div className="text-2xl font-bold text-blue-600">{documentSections.length}</div>
             <div className="text-sm text-blue-800">文档章节</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-blue-600">
-              {document.reduce((acc, section) => acc + section.content.length, 0)}
+                              {documentSections.reduce((acc: number, section: DocumentSection) => acc + section.content.length, 0)}
             </div>
             <div className="text-sm text-blue-800">字符数</div>
           </div>
